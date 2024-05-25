@@ -1,0 +1,12 @@
+{
+    "files.associations": {
+        "__availability": "cpp",
+        "charconv": "cpp",
+        "string": "cpp",
+        "vector": "cpp",
+        "__config": "cpp",
+        "__split_buffer": "cpp",
+        "deque": "cpp",
+        "list": "cpp"
+    }
+}
