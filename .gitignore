@@ -214,3 +214,5 @@ Mkfile.old
 dkms.conf
 
 *.onnx
+
+*.pt

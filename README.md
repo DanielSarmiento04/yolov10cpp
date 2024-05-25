@@ -1,6 +1,25 @@
 # yolov10
 
 
+## Prepare the code 
+
+
+1. Download de model you want 
+
+  
+  - yolov10n
+  - yolov10s
+  - yolov10m
+  - yolov10b
+  - yolov10l
+  - yolov10x
+
+
+```bash
+    python download_model.py  --model {MODEL_SELECTED}
+```
+
+
 ## How to run this code 
 
 

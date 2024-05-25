@@ -11,13 +11,18 @@ import argparse
 
 # Define the function to download the model
 parser = argparse.ArgumentParser(description='Process some integers.')
-parser.add_argument('--model', choices=['yolov9-c', 'yolov9-e'], default='yolov9-c', help='Model to download')
+parser.add_argument(
+    '--model', 
+    choices=['yolov10n', 'yolov10s', 'yolov10m', 'yolov10b', 'yolov10l', 'yolov10x'],
+    default='yolov10n', 
+    help='Model to download'
+)
 
 args = parser.parse_args()
 
 def download_model(model):
 
-    url = "https://github.com/WongKinYiu/yolov9/releases/download/v0.1/" + model + ".pt"
+    url = "https://github.com/THU-MIG/yolov10/releases/download/v1.0/" + model + ".pt"
     # Downloading zip file using urllib package.
     print("Downloading the model...")
     urlretrieve(url, model + ".pt")
