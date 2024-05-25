@@ -36,7 +36,7 @@ public:
     Inference(
         const std::string &onnxModelPath,
         const cv::Size &modelInputShape = {640, 640},
-        const VERSION &version = VERSION::V9,
+        const VERSION &version = VERSION::V10,
         const std::string &classesTxtFile = "",
         const bool &runWithCuda = false);
     std::vector<Detection> process(const cv::Mat &input);

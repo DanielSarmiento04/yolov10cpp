@@ -132,7 +132,32 @@ std::vector<Detection> Inference::process(const cv::Mat &input)
         else if (versionModel == VERSION::V9) {
         }
         else if (versionModel == VERSION::V10) {
-            
+            float *classes_scores = data + 4;
+
+            cv::Mat scores(1, classes.size(), CV_32FC1, classes_scores);
+            cv::Point class_id;
+            double maxClassScore;
+
+            minMaxLoc(scores, 0, &maxClassScore, 0, &class_id);
+
+            if (maxClassScore > modelScoreThreshold)
+            {
+                confidences.push_back(maxClassScore);
+                class_ids.push_back(class_id.x);
+
+                float x = data[0];
+                float y = data[1];
+                float w = data[2];
+                float h = data[3];
+
+                int left = int((x - 0.5 * w) * x_factor);
+                int top = int((y - 0.5 * h) * y_factor);
+
+                int width = int(w * x_factor);
+                int height = int(h * y_factor);
+
+                boxes.push_back(cv::Rect(left, top, width, height));
+            }
         }
 
 

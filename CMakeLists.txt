@@ -8,6 +8,22 @@ set(CMAKE_CXX_STANDARD 17)
 
 find_package(OpenCV REQUIRED)
 
+# Find ONNX Runtime package
+find_path(ONNXRUNTIME_INCLUDE_DIR onnxruntime/core/session/onnxruntime_c_api.h
+    HINTS /usr/local/include/onnxruntime
+)
+find_library(ONNXRUNTIME_LIBRARY onnxruntime
+    HINTS /usr/local/lib
+)
+
+if(NOT ONNXRUNTIME_INCLUDE_DIR)
+    message(FATAL_ERROR "ONNX Runtime include directory not found")
+endif()
+if(NOT ONNXRUNTIME_LIBRARY)
+    message(FATAL_ERROR "ONNX Runtime library not found")
+endif()
+
+
 add_library(${project_name}-lib
         src/ia/inference.cpp
         src/ia/inference.h
@@ -21,7 +37,8 @@ target_link_libraries(${project_name}-lib
 
 # add the executable
 add_executable(${project_name} 
-        src/main.cpp
+        # src/main.cpp
+        run.cpp
 )
 target_link_libraries(${project_name} ${project_name}-lib)
 

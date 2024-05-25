@@ -24,6 +24,11 @@
 ```
     yolo export model=yolov10n.pt format=onnx
 ```
+## Dependencies 
+
+1. ffmpeg
+2. Opnecv
+3. onnxruntime
 
 
 ## How to run this code 
