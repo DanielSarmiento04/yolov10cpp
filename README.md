@@ -19,6 +19,12 @@
     python download_model.py  --model {MODEL_SELECTED}
 ```
 
+## Convert model
+
+```
+    yolo export model=yolov10n.pt format=onnx
+```
+
 
 ## How to run this code 
 
