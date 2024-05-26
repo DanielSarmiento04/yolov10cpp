@@ -1,19 +1,18 @@
 cmake_minimum_required(VERSION 3.10)
 
-# set the project name in a variable
+# Set the project name in a variable
 set(project_name yolov10_cpp)
 project(${project_name})
 set(CMAKE_CXX_STANDARD 17)
 
-
 find_package(OpenCV REQUIRED)
 
 # Find ONNX Runtime package
-find_path(ONNXRUNTIME_INCLUDE_DIR onnxruntime/core/session/onnxruntime_c_api.h
-    HINTS /usr/local/include/onnxruntime
+find_path(ONNXRUNTIME_INCLUDE_DIR onnxruntime_c_api.h
+    HINTS /opt/homebrew/Cellar/onnxruntime/1.17.1/include/onnxruntime
 )
 find_library(ONNXRUNTIME_LIBRARY onnxruntime
-    HINTS /usr/local/lib
+    HINTS /opt/homebrew/Cellar/onnxruntime/1.17.1/lib
 )
 
 if(NOT ONNXRUNTIME_INCLUDE_DIR)
@@ -23,22 +22,25 @@ if(NOT ONNXRUNTIME_LIBRARY)
     message(FATAL_ERROR "ONNX Runtime library not found")
 endif()
 
-
 add_library(${project_name}-lib
+    src/placeholder.cpp
+    # src/ia/inference.cpp
+    # src/ia/inference.h
 )
 
 target_include_directories(${project_name}-lib PUBLIC src)
+target_include_directories(${project_name}-lib PUBLIC ${ONNXRUNTIME_INCLUDE_DIR})
 
 target_link_libraries(${project_name}-lib
-        PUBLIC ${OpenCV_LIBS}
+    PUBLIC ${OpenCV_LIBS}
+    PUBLIC ${ONNXRUNTIME_LIBRARY}
 )
 
-# add the executable
+# Add the executable
 add_executable(${project_name} 
-        main.cpp
+    ./src/main.cpp
 )
+target_include_directories(${project_name} PUBLIC ${ONNXRUNTIME_INCLUDE_DIR})
 target_link_libraries(${project_name} ${project_name}-lib)
 
 add_dependencies(${project_name} ${project_name}-lib)
-
-
