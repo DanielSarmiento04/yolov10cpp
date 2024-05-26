@@ -51,3 +51,7 @@ The next repository aims to provide a basic c++ script using std 17 over, to do 
     make
 ```
 
+
+## Reference 
+
+[1] Wang, A., Chen, H., Liu, L., Chen, K., Lin, Z., Han, J., & Ding, G. (2024). YOLOv10: Real-Time End-to-End Object Detection. arXiv [Cs.CV]. Retrieved from http://arxiv.org/abs/2405.14458
