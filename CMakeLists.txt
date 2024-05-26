@@ -25,8 +25,6 @@ endif()
 
 
 add_library(${project_name}-lib
-        src/ia/inference.cpp
-        src/ia/inference.h
 )
 
 target_include_directories(${project_name}-lib PUBLIC src)
@@ -37,8 +35,7 @@ target_link_libraries(${project_name}-lib
 
 # add the executable
 add_executable(${project_name} 
-        # src/main.cpp
-        run.cpp
+        main.cpp
 )
 target_link_libraries(${project_name} ${project_name}-lib)
 

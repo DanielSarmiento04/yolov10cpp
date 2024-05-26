@@ -2,6 +2,7 @@
 #include <iostream>
 #include <vector>
 #include <opencv2/opencv.hpp>
+#include <algorithm>
 
 using namespace cv;
 
@@ -40,13 +41,28 @@ std::string getOutputName(Ort::Session& session, Ort::AllocatorWithDefaultOption
     return std::string(name_allocator.get());
 }
 
-// Function to post-process the results (for simplicity, just prints the output)
-void postprocessResults(const std::vector<float>& results) {
-    std::cout << "Output tensor size: " << results.size() << std::endl;
-    for (size_t i = 0; i < results.size(); i++) {
-        std::cout << results[i] << " ";
+// Function to filter and post-process the results based on a confidence threshold
+struct Detection {
+    float confidence;
+    cv::Rect bbox;
+    int class_id;
+};
+
+std::vector<Detection> filterDetections(const std::vector<float>& results, float confidence_threshold) {
+    std::vector<Detection> detections;
+    const int num_detections = results.size() / 7; // Assuming the output tensor has 7 values per detection: [batch_id, class_id, confidence, x1, y1, x2, y2]
+    for (int i = 0; i < num_detections; ++i) {
+        float confidence = results[i * 7 + 2];
+        if (confidence >= confidence_threshold) {
+            int class_id = static_cast<int>(results[i * 7 + 1]);
+            float x1 = results[i * 7 + 3];
+            float y1 = results[i * 7 + 4];
+            float x2 = results[i * 7 + 5];
+            float y2 = results[i * 7 + 6];
+            detections.push_back({confidence, cv::Rect(cv::Point(x1, y1), cv::Point(x2, y2)), class_id});
+        }
     }
-    std::cout << std::endl;
+    return detections;
 }
 
 // Function to run inference on the model
@@ -70,10 +86,8 @@ std::vector<float> runInference(Ort::Session& session, const std::vector<float>&
     return std::vector<float>(floatarr, floatarr + output_tensor_size);
 }
 
-
 int main(int argc, char* argv[])
 {
-
     // Check for the correct number of arguments
     if (argc != 3) {
         std::cerr << "Usage: " << argv[0] << " <model_path> <image_path>" << std::endl;
@@ -95,7 +109,7 @@ int main(int argc, char* argv[])
         // Load model
         Ort::Session session = loadModel(env, model_path, session_options);
 
-        // Define input shape (e.g., {1, 3, 416, 416})
+        // Define input shape (e.g., {1, 3, 640, 640})
         std::vector<int64_t> input_shape = {1, 3, 640, 640};
 
         // Preprocess image
@@ -104,8 +118,19 @@ int main(int argc, char* argv[])
         // Run inference
         std::vector<float> results = runInference(session, input_tensor_values, input_shape);
 
-        // Postprocess results
-        postprocessResults(results);
+        // Define confidence threshold
+        float confidence_threshold = 0.5;
+
+        // Filter results
+        std::vector<Detection> detections = filterDetections(results, confidence_threshold);
+
+        // Print detections
+        for (const auto& detection : detections) {
+            std::cout << "Class ID: " << detection.class_id << " Confidence: " << detection.confidence
+                      << " BBox: [" << detection.bbox.x << ", " << detection.bbox.y << ", "
+                      << detection.bbox.width << ", " << detection.bbox.height << "]" << std::endl;
+        }
+
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
         return 1;

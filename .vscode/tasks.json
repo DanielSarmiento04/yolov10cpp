@@ -10,7 +10,6 @@
                 "${file}",
                 "-o",
                 "${fileDirname}/${fileBasenameNoExtension}.out",
-                "/Users/josedanielsarmientoblanco/Desktop/hobby/yolov10cpp/src/ia/inference.cpp",
                 "-I",
                 "/opt/homebrew/Cellar/opencv/4.9.0_8/include/opencv4/opencv2",
                 "-I",
