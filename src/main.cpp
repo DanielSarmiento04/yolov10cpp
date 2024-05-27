@@ -17,9 +17,6 @@ const std::vector<std::string> CLASS_NAMES = {
     "cell phone", "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase",
     "scissors", "teddy bear", "hair drier", "toothbrush"};
 
-const std::vector<std::vector<unsigned int>> COLORS = {
-    {0, 114, 189}, {217, 83, 25}, {237, 177, 32}, {126, 47, 142}, {119, 172, 48}, {77, 190, 238}, {162, 20, 47}, {76, 76, 76}, {153, 153, 153}, {255, 0, 0}, {255, 128, 0}, {191, 191, 0}, {0, 255, 0}, {0, 0, 255}, {170, 0, 255}, {85, 85, 0}, {85, 170, 0}, {85, 255, 0}, {170, 85, 0}, {170, 170, 0}, {170, 255, 0}, {255, 85, 0}, {255, 170, 0}, {255, 255, 0}, {0, 85, 128}, {0, 170, 128}, {0, 255, 128}, {85, 0, 128}, {85, 85, 128}, {85, 170, 128}, {85, 255, 128}, {170, 0, 128}, {170, 85, 128}, {170, 170, 128}, {170, 255, 128}, {255, 0, 128}, {255, 85, 128}, {255, 170, 128}, {255, 255, 128}, {0, 85, 255}, {0, 170, 255}, {0, 255, 255}, {85, 0, 255}, {85, 85, 255}, {85, 170, 255}, {85, 255, 255}, {170, 0, 255}, {170, 85, 255}, {170, 170, 255}, {170, 255, 255}, {255, 0, 255}, {255, 85, 255}, {255, 170, 255}, {85, 0, 0}, {128, 0, 0}, {170, 0, 0}, {212, 0, 0}, {255, 0, 0}, {0, 43, 0}, {0, 85, 0}, {0, 128, 0}, {0, 170, 0}, {0, 212, 0}, {0, 255, 0}, {0, 0, 43}, {0, 0, 85}, {0, 0, 128}, {0, 0, 170}, {0, 0, 212}, {0, 0, 255}, {0, 0, 0}, {36, 36, 36}, {73, 73, 73}, {109, 109, 109}, {146, 146, 146}, {182, 182, 182}, {219, 219, 219}, {0, 114, 189}, {80, 183, 189}, {128, 128, 0}};
-
 // Function to load and preprocess the image
 std::vector<float> preprocessImage(const std::string &image_path, const std::vector<int64_t> &input_shape)
 {
@@ -34,8 +31,14 @@ std::vector<float> preprocessImage(const std::string &image_path, const std::vec
 
     resized_image.convertTo(resized_image, CV_32F, 1.0 / 255);
 
-    std::vector<float> input_tensor_values(input_shape[1] * input_shape[2] * input_shape[3]);
-    std::memcpy(input_tensor_values.data(), resized_image.data, input_tensor_values.size() * sizeof(float));
+    std::vector<cv::Mat> channels(3);
+    cv::split(resized_image, channels);
+
+    std::vector<float> input_tensor_values;
+    for (int c = 0; c < 3; ++c)
+    {
+        input_tensor_values.insert(input_tensor_values.end(), (float *)channels[c].data, (float *)channels[c].data + input_shape[2] * input_shape[3]);
+    }
 
     return input_tensor_values;
 }
@@ -60,7 +63,7 @@ std::string getOutputName(Ort::Session &session, Ort::AllocatorWithDefaultOption
     return std::string(name_allocator.get());
 }
 
-// Function to filter and post-process the results based on a confidence threshold
+// Struct to hold detection results
 struct Detection
 {
     float confidence;
@@ -68,32 +71,36 @@ struct Detection
     int class_id;
 };
 
-
 // Function to filter and post-process the results based on a confidence threshold
-std::vector<Detection> filterDetections(const std::vector<float>& results, float confidence_threshold, int img_width, int img_height) {
+std::vector<Detection> filterDetections(const std::vector<float> &results, float confidence_threshold, int img_width, int img_height)
+{
     std::vector<Detection> detections;
     const int num_classes = 80; // Adjust this based on your YOLO model
     const int num_detections = results.size() / (num_classes + 5);
 
-    for (int i = 0; i < num_detections; ++i) {
-        float x_center   = results[i * (num_classes + 5) + 0];
-        float y_center   = results[i * (num_classes + 5) + 1];
-        float width      = results[i * (num_classes + 5) + 2];
-        float height     = results[i * (num_classes + 5) + 3];
+    for (int i = 0; i < num_detections; ++i)
+    {
+        float x_center = results[i * (num_classes + 5) + 0];
+        float y_center = results[i * (num_classes + 5) + 1];
+        float width = results[i * (num_classes + 5) + 2];
+        float height = results[i * (num_classes + 5) + 3];
         float confidence = results[i * (num_classes + 5) + 4];
 
         int class_id = -1;
         float max_class_score = 0.0;
 
-        for (int j = 0; j < num_classes; ++j) {
+        for (int j = 0; j < num_classes; ++j)
+        {
             float class_score = results[i * (num_classes + 5) + 5 + j];
-            if (class_score > max_class_score) {
+            if (class_score > max_class_score)
+            {
                 max_class_score = class_score;
                 class_id = j;
             }
         }
 
-        if (confidence >= confidence_threshold && class_id != -1) {
+        if (confidence >= confidence_threshold && class_id != -1)
+        {
             float left = (x_center - width / 2.0) * img_width;
             float top = (y_center - height / 2.0) * img_height;
             float bbox_width = width * img_width;
@@ -105,7 +112,6 @@ std::vector<Detection> filterDetections(const std::vector<float>& results, float
 
     return detections;
 }
-
 
 // Function to run inference on the model
 std::vector<float> runInference(Ort::Session &session, const std::vector<float> &input_tensor_values, const std::vector<int64_t> &input_shape)
