@@ -22,7 +22,7 @@ args = parser.parse_args()
 
 def download_model(model):
 
-    url = "https://github.com/THU-MIG/yolov10/releases/download/v1.0/" + model + ".pt"
+    url = "https://github.com/THU-MIG/yolov10/releases/download/v1.1/" + model + ".pt"
     # Downloading zip file using urllib package.
     print("Downloading the model...")
     urlretrieve(url, model + ".pt")
