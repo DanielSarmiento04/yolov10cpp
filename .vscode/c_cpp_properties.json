@@ -7,7 +7,6 @@
                 "/opt/homebrew/Cellar/opencv/4.9.0_8/include/opencv4/opencv2",
                 "/opt/homebrew/Cellar/opencv/4.9.0_8/include/opencv4",
                 "/opt/homebrew/Cellar/onnxruntime/1.17.1/include/onnxruntime",
-                "/usr/local/include/oatpp-1.3.0/oatpp"
             ],
             "defines": [],
             "macFrameworkPath": [],
@@ -19,7 +18,6 @@
                 "path": [
                     "/opt/homebrew/Cellar/opencv/4.9.0_8/include/opencv4",
                     "/opt/homebrew/Cellar/onnxruntime/1.17.1/include/onnxruntime",
-                    "/usr/local/include/oatpp-1.3.0/oatpp"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""
