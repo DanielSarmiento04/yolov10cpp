@@ -39,6 +39,14 @@ The next repository aims to provide a basic c++ script using std 17 over, to do 
 3. onnxruntime
 
 
+- MacOs
+```
+    brew install ffmpeg 
+    brew install opencv
+    brew install onnxruntime
+```
+
+
 ## How to run this code 
 
 
