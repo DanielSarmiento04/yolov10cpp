@@ -46,6 +46,21 @@ The next repository aims to provide a basic c++ script using std 17 over, to do 
     brew install onnxruntime
 ```
 
+- Ubuntu: Unfortunately, onnx runtime is no available using native apt-get
+
+You can use python
+```
+sudo apt-get update
+sudo apt-get install python3-pip
+pip3 install onnxruntime
+```
+
+dotnet 
+```
+dotnet add package Microsoft.ML.OnnxRuntime
+
+```
+
 
 ## How to run this code 
 
