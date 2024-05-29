@@ -75,38 +75,21 @@ struct Detection
 std::vector<Detection> filterDetections(const std::vector<float> &results, float confidence_threshold, int img_width, int img_height)
 {
     std::vector<Detection> detections;
-    const int num_classes = 80; // Adjust this based on your YOLO model
-    const int num_detections = results.size() / (num_classes + 5);
+    const int num_detections = results.size() / 6;
 
     for (int i = 0; i < num_detections; ++i)
     {
-        float x_center = results[i * (num_classes + 5) + 0];
-        float y_center = results[i * (num_classes + 5) + 1];
-        float width = results[i * (num_classes + 5) + 2];
-        float height = results[i * (num_classes + 5) + 3];
-        float confidence = results[i * (num_classes + 5) + 4];
+        float left = results[i * 6 + 0];
+        float top = results[i * 6 + 1];
+        float width = results[i * 6 + 2] - left;
+        float height = results[i * 6 + 3] - top;
+        float confidence = results[i * 6 + 4];
+        int class_id = results[i * 6 + 5];
+        
 
-        int class_id = -1;
-        float max_class_score = 0.0;
-
-        for (int j = 0; j < num_classes; ++j)
+        if (confidence >= confidence_threshold)
         {
-            float class_score = results[i * (num_classes + 5) + 5 + j];
-            if (class_score > max_class_score)
-            {
-                max_class_score = class_score;
-                class_id = j;
-            }
-        }
-
-        if (confidence >= confidence_threshold && class_id != -1)
-        {
-            float left = (x_center - width / 2.0) * img_width;
-            float top = (y_center - height / 2.0) * img_height;
-            float bbox_width = width * img_width;
-            float bbox_height = height * img_height;
-
-            detections.push_back({confidence, cv::Rect(static_cast<int>(left), static_cast<int>(top), static_cast<int>(bbox_width), static_cast<int>(bbox_height)), class_id});
+            detections.push_back({confidence, cv::Rect(static_cast<int>(left), static_cast<int>(top), static_cast<int>(width), static_cast<int>(height)), class_id});
         }
     }
 
