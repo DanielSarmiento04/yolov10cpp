@@ -81,6 +81,14 @@ dotnet add package Microsoft.ML.OnnxRuntime
     ./yolov10_cpp [MODEL_PATH] [IMAGE_PATH]
 ```
 
+
+## Future plans
+
+1. Modularize the components.
+2. Make a example to video real time.
+3. Support Cuda. ?
+
+
 ## Reference 
 
 [1] Wang, A., Chen, H., Liu, L., Chen, K., Lin, Z., Han, J., & Ding, G. (2024). YOLOv10: Real-Time End-to-End Object Detection. arXiv [Cs.CV]. Retrieved from http://arxiv.org/abs/2405.14458
