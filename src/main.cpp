@@ -69,6 +69,7 @@ struct Detection
     float confidence;
     cv::Rect bbox;
     int class_id;
+    std::string class_name;
 };
 
 // Function to filter and post-process the results based on a confidence threshold
@@ -89,7 +90,19 @@ std::vector<Detection> filterDetections(const std::vector<float> &results, float
 
         if (confidence >= confidence_threshold)
         {
-            detections.push_back({confidence, cv::Rect(static_cast<int>(left), static_cast<int>(top), static_cast<int>(width), static_cast<int>(height)), class_id});
+            detections.push_back(
+                {
+                    confidence, 
+                    cv::Rect(
+                        static_cast<int>(left),
+                        static_cast<int>(top), 
+                        static_cast<int>(width), 
+                        static_cast<int>(height)
+                    ), 
+                    class_id,
+                    CLASS_NAMES[class_id]
+                }
+            );
         }
     }
 
@@ -168,7 +181,8 @@ int main(int argc, char *argv[])
         {
             std::cout << "Class ID: " << detection.class_id << " Confidence: " << detection.confidence
                       << " BBox: [" << detection.bbox.x << ", " << detection.bbox.y << ", "
-                      << detection.bbox.width << ", " << detection.bbox.height << "]" << std::endl;
+                      << detection.bbox.width << ", " << detection.bbox.height << "]"
+                      << "Class Name: " << detection.class_name<< std::endl;
         }
     }
     catch (const std::exception &e)
