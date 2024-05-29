@@ -75,6 +75,12 @@ dotnet add package Microsoft.ML.OnnxRuntime
 ```
 
 
+2. Run the following command
+
+```
+    ./yolov10_cpp [MODEL_PATH] [IMAGE_PATH]
+```
+
 ## Reference 
 
 [1] Wang, A., Chen, H., Liu, L., Chen, K., Lin, Z., Han, J., & Ding, G. (2024). YOLOv10: Real-Time End-to-End Object Detection. arXiv [Cs.CV]. Retrieved from http://arxiv.org/abs/2405.14458
