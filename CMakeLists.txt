@@ -24,8 +24,8 @@ endif()
 
 add_library(${project_name}-lib
     src/placeholder.cpp
-    # src/ia/inference.cpp
-    # src/ia/inference.h
+    src/ia/inference.cpp
+    src/ia/inference.h
 )
 
 target_include_directories(${project_name}-lib PUBLIC src)

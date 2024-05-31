@@ -25,16 +25,21 @@ InferenceEngine::InferenceEngine(const std::string &model_path)
 
 InferenceEngine::~InferenceEngine() {}
 
-std::vector<float> InferenceEngine::preprocessImage(const std::string &image_path, int &orig_width, int &orig_height)
+/*
+ * Function to preprocess the image
+ *
+ * @param image_path: path to the image
+ * @param orig_width: original width of the image
+ * @param orig_height: original height of the image
+ *
+ * @return: vector of floats representing the preprocessed image
+ */
+std::vector<float> InferenceEngine::preprocessImage(const cv::Mat &image)
 {
-    cv::Mat image = cv::imread(image_path);
     if (image.empty())
     {
-        throw std::runtime_error("Could not read the image: " + image_path);
+        throw std::runtime_error("Could not read the image");
     }
-
-    orig_width = image.cols;
-    orig_height = image.rows;
 
     cv::Mat resized_image;
     cv::resize(image, resized_image, cv::Size(input_shape[2], input_shape[3]));
@@ -53,6 +58,19 @@ std::vector<float> InferenceEngine::preprocessImage(const std::string &image_pat
     return input_tensor_values;
 }
 
+/*
+    * Function to filter the detections based on the confidence threshold
+    *
+    * @param results: vector of floats representing the output tensor
+    * @param confidence_threshold: minimum confidence threshold
+    * @param img_width: width of the input image
+    * @param img_height: height of the input image
+    * @param orig_width: original width of the image
+    * @param orig_height: original height of the image
+    *
+    * @return: vector of Detection objects
+
+*/
 std::vector<Detection> InferenceEngine::filterDetections(const std::vector<float> &results, float confidence_threshold, int img_width, int img_height, int orig_width, int orig_height)
 {
     std::vector<Detection> detections;
@@ -85,6 +103,14 @@ std::vector<Detection> InferenceEngine::filterDetections(const std::vector<float
     return detections;
 }
 
+
+/*
+    * Function to run inference
+    *
+    * @param input_tensor_values: vector of floats representing the input tensor
+    *
+    * @return: vector of floats representing the output tensor
+*/
 std::vector<float> InferenceEngine::runInference(const std::vector<float> &input_tensor_values)
 {
     Ort::AllocatorWithDefaultOptions allocator;
@@ -106,6 +132,54 @@ std::vector<float> InferenceEngine::runInference(const std::vector<float> &input
     return std::vector<float>(floatarr, floatarr + output_tensor_size);
 }
 
+/*
+    * Function to draw the labels on the image
+    *
+    * @param image: input image
+    * @param detections: vector of Detection objects
+    *
+    * @return: image with labels drawn
+
+*/
+cv::Mat InferenceEngine::draw_labels(const cv::Mat &image, const std::vector<Detection> &detections)
+{
+    cv::Mat result = image.clone();
+
+    for (const auto &detection : detections)
+    {
+        cv::rectangle(result, detection.bbox, cv::Scalar(0, 255, 0), 2);
+        std::string label = detection.class_name + ": " + std::to_string(detection.confidence);
+
+        int baseLine;
+        cv::Size labelSize = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
+
+        cv::rectangle(
+            result,
+            cv::Point(detection.bbox.x, detection.bbox.y - labelSize.height),
+            cv::Point(detection.bbox.x + labelSize.width, detection.bbox.y + baseLine),
+            cv::Scalar(255, 255, 255),
+            cv::FILLED);
+
+        cv::putText(
+            result,
+            label,
+            cv::Point(
+                detection.bbox.x,
+                detection.bbox.y),
+            cv::FONT_HERSHEY_SIMPLEX,
+            0.5,
+            cv::Scalar(0, 0, 0),
+            1);
+    }
+
+    return result;
+}
+
+/*
+    * Function to get the input name
+    *
+    * @return: name of the input tensor
+*/
 std::string InferenceEngine::getInputName()
 {
     Ort::AllocatorWithDefaultOptions allocator;
@@ -113,6 +187,11 @@ std::string InferenceEngine::getInputName()
     return std::string(name_allocator.get());
 }
 
+/*
+    * Function to get the output name
+    *
+    * @return: name of the output tensor
+*/
 std::string InferenceEngine::getOutputName()
 {
     Ort::AllocatorWithDefaultOptions allocator;

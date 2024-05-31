@@ -21,9 +21,11 @@ public:
     InferenceEngine(const std::string &model_path);
     ~InferenceEngine();
 
-    std::vector<float> preprocessImage(const std::string &image_path, int &orig_width, int &orig_height);
+    std::vector<float> preprocessImage(const cv::Mat &image);
     std::vector<Detection> filterDetections(const std::vector<float> &results, float confidence_threshold, int img_width, int img_height, int orig_width, int orig_height);
     std::vector<float> runInference(const std::vector<float> &input_tensor_values);
+    
+    cv::Mat draw_labels(const cv::Mat &image, const std::vector<Detection> &detections);
 
     std::vector<int64_t> input_shape;
     
