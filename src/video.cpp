@@ -2,7 +2,6 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
 
-
 int main(int argc, char const *argv[])
 {
     if (argc != 3)
@@ -32,7 +31,7 @@ int main(int argc, char const *argv[])
     cv::Mat frame;
 
     std::cout << "Start grabbing" << std::endl
-         << "Press any key to terminate" <<std::endl;
+              << "Press any key to terminate" << std::endl;
 
     for (;;)
     {
@@ -44,7 +43,20 @@ int main(int argc, char const *argv[])
             break;
         }
 
-        cv::imshow("test", frame);
+        int orig_width = frame.cols;
+        int orig_height = frame.rows;
+
+        std::vector<float> input_tensor_values = engine.preprocessImage(frame);
+
+        std::vector<float> results = engine.runInference(input_tensor_values);
+
+        float confidence_threshold = 0.5;
+
+        std::vector<Detection> detections = engine.filterDetections(results, confidence_threshold, engine.input_shape[2], engine.input_shape[3], orig_width, orig_height);
+
+        cv::Mat output = engine.draw_labels(frame, detections);
+
+        cv::imshow("test", output);
 
         if (cv::waitKey(5) >= 0)
             break;
