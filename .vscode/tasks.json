@@ -4,10 +4,11 @@
         {
             "label": "Build",
             "type": "shell",
-            "command": "g++",
+            "command": "clang++",
             "args": [
                 "-std=c++17",
                 "${file}",
+                "/Users/josedanielsarmientoblanco/Desktop/hobby/yolov10cpp/src/ia/inference.h",
                 "-o",
                 "${fileDirname}/${fileBasenameNoExtension}.out",
                 "-I",

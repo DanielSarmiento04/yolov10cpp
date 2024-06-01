@@ -27,6 +27,21 @@ The next repository aims to provide a basic c++ script using std 17 over, to do 
     python download_model.py  --model {MODEL_SELECTED}
 ```
 
+## Install packages
+
+```
+    conda create -n yolov10 python=3.9
+    conda activate yolov10
+
+    git clone https://github.com/THU-MIG/yolov10
+    cd yolov10
+
+    pip install -r requirements.txt
+    pip install -e .
+
+    cd ..
+```
+
 ## Convert model
 
 ```
