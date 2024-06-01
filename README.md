@@ -75,12 +75,19 @@ dotnet add package Microsoft.ML.OnnxRuntime
 ```
 
 
-2. Run the following command
+2. Run the following command 
+
+> static images
 
 ```
     ./yolov10_cpp [MODEL_PATH] [IMAGE_PATH]
 ```
 
+> realtime 
+
+```
+    ./yolov10_cpp_video [MODEL_PATH] [SOURCE]
+```
 
 ## Future plans
 
