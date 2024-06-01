@@ -36,11 +36,17 @@ target_link_libraries(${project_name}-lib
     PUBLIC ${ONNXRUNTIME_LIBRARY}
 )
 
-# Add the executable
+# Add the main executable
 add_executable(${project_name} 
     ./src/main.cpp
 )
 target_include_directories(${project_name} PUBLIC ${ONNXRUNTIME_INCLUDE_DIR})
 target_link_libraries(${project_name} ${project_name}-lib)
 
-add_dependencies(${project_name} ${project_name}-lib)
+# Add the video executable
+add_executable(${project_name}_video 
+    ./src/video.cpp
+)
+target_include_directories(${project_name}_video PUBLIC ${ONNXRUNTIME_INCLUDE_DIR})
+target_link_libraries(${project_name}_video ${project_name}-lib)
+
