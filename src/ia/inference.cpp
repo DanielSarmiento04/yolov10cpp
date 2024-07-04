@@ -21,6 +21,12 @@ InferenceEngine::InferenceEngine(const std::string &model_path)
 {
     session_options.SetIntraOpNumThreads(1);
     session_options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_BASIC);
+
+    // Check if the session was created successfully
+    if (!session)
+    {
+        throw std::runtime_error("Failed to create ONNX Runtime session.");
+    }
 }
 
 InferenceEngine::~InferenceEngine() {}
@@ -28,10 +34,7 @@ InferenceEngine::~InferenceEngine() {}
 /*
  * Function to preprocess the image
  *
- * @param image_path: path to the image
- * @param orig_width: original width of the image
- * @param orig_height: original height of the image
- *
+ * @param image: input image as cv::Mat
  * @return: vector of floats representing the preprocessed image
  */
 std::vector<float> InferenceEngine::preprocessImage(const cv::Mat &image)
@@ -43,13 +46,14 @@ std::vector<float> InferenceEngine::preprocessImage(const cv::Mat &image)
 
     cv::Mat resized_image;
     cv::resize(image, resized_image, cv::Size(input_shape[2], input_shape[3]));
-
     resized_image.convertTo(resized_image, CV_32F, 1.0 / 255);
 
     std::vector<cv::Mat> channels(3);
     cv::split(resized_image, channels);
 
     std::vector<float> input_tensor_values;
+    input_tensor_values.reserve(input_shape[1] * input_shape[2] * input_shape[3]);
+
     for (int c = 0; c < 3; ++c)
     {
         input_tensor_values.insert(input_tensor_values.end(), (float *)channels[c].data, (float *)channels[c].data + input_shape[2] * input_shape[3]);
@@ -59,22 +63,22 @@ std::vector<float> InferenceEngine::preprocessImage(const cv::Mat &image)
 }
 
 /*
-    * Function to filter the detections based on the confidence threshold
-    *
-    * @param results: vector of floats representing the output tensor
-    * @param confidence_threshold: minimum confidence threshold
-    * @param img_width: width of the input image
-    * @param img_height: height of the input image
-    * @param orig_width: original width of the image
-    * @param orig_height: original height of the image
-    *
-    * @return: vector of Detection objects
-
-*/
+ * Function to filter the detections based on the confidence threshold
+ *
+ * @param results: vector of floats representing the output tensor
+ * @param confidence_threshold: minimum confidence threshold
+ * @param img_width: width of the input image
+ * @param img_height: height of the input image
+ * @param orig_width: original width of the image
+ * @param orig_height: original height of the image
+ * @return: vector of Detection objects
+ */
 std::vector<Detection> InferenceEngine::filterDetections(const std::vector<float> &results, float confidence_threshold, int img_width, int img_height, int orig_width, int orig_height)
 {
     std::vector<Detection> detections;
     const int num_detections = results.size() / 6;
+
+    detections.reserve(num_detections);
 
     for (int i = 0; i < num_detections; ++i)
     {
@@ -83,7 +87,7 @@ std::vector<Detection> InferenceEngine::filterDetections(const std::vector<float
         float right = results[i * 6 + 2];
         float bottom = results[i * 6 + 3];
         float confidence = results[i * 6 + 4];
-        int class_id = results[i * 6 + 5];
+        int class_id = static_cast<int>(results[i * 6 + 5]);
 
         if (confidence >= confidence_threshold)
         {
@@ -103,14 +107,12 @@ std::vector<Detection> InferenceEngine::filterDetections(const std::vector<float
     return detections;
 }
 
-
 /*
-    * Function to run inference
-    *
-    * @param input_tensor_values: vector of floats representing the input tensor
-    *
-    * @return: vector of floats representing the output tensor
-*/
+ * Function to run inference
+ *
+ * @param input_tensor_values: vector of floats representing the input tensor
+ * @return: vector of floats representing the output tensor
+ */
 std::vector<float> InferenceEngine::runInference(const std::vector<float> &input_tensor_values)
 {
     Ort::AllocatorWithDefaultOptions allocator;
@@ -133,14 +135,12 @@ std::vector<float> InferenceEngine::runInference(const std::vector<float> &input
 }
 
 /*
-    * Function to draw the labels on the image
-    *
-    * @param image: input image
-    * @param detections: vector of Detection objects
-    *
-    * @return: image with labels drawn
-
-*/
+ * Function to draw the labels on the image
+ *
+ * @param image: input image
+ * @param detections: vector of Detection objects
+ * @return: image with labels drawn
+ */
 cv::Mat InferenceEngine::draw_labels(const cv::Mat &image, const std::vector<Detection> &detections)
 {
     cv::Mat result = image.clone();
@@ -163,9 +163,7 @@ cv::Mat InferenceEngine::draw_labels(const cv::Mat &image, const std::vector<Det
         cv::putText(
             result,
             label,
-            cv::Point(
-                detection.bbox.x,
-                detection.bbox.y),
+            cv::Point(detection.bbox.x, detection.bbox.y),
             cv::FONT_HERSHEY_SIMPLEX,
             0.5,
             cv::Scalar(0, 0, 0),
@@ -176,10 +174,10 @@ cv::Mat InferenceEngine::draw_labels(const cv::Mat &image, const std::vector<Det
 }
 
 /*
-    * Function to get the input name
-    *
-    * @return: name of the input tensor
-*/
+ * Function to get the input name
+ *
+ * @return: name of the input tensor
+ */
 std::string InferenceEngine::getInputName()
 {
     Ort::AllocatorWithDefaultOptions allocator;
@@ -188,10 +186,10 @@ std::string InferenceEngine::getInputName()
 }
 
 /*
-    * Function to get the output name
-    *
-    * @return: name of the output tensor
-*/
+ * Function to get the output name
+ *
+ * @return: name of the output tensor
+ */
 std::string InferenceEngine::getOutputName()
 {
     Ort::AllocatorWithDefaultOptions allocator;
