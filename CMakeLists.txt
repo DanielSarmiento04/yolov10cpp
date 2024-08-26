@@ -23,7 +23,6 @@ if(NOT ONNXRUNTIME_LIBRARY)
 endif()
 
 add_library(${project_name}-lib
-    src/placeholder.cpp
     src/ia/inference.cpp
     src/ia/inference.h
 )
