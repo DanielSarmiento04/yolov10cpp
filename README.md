@@ -118,6 +118,11 @@ our cpp binding | python binding
   <img src="./assets/yolo/zidane.jpg" alt="Image 2" width="45%"/>
 </p>
 
+| Command Line Execution                                              | Resource Utilization                                 |
+|---------------------------------------------------------------------|------------------------------------------------------|
+| `./yolov10_cpp ../yolov10n.onnx ../bus.jpg`                         | **0.46s** user, **0.10s** system, **94%** CPU, **0.595s** total |
+| `yolo detect predict model=yolov10n.onnx source=bus.jpg`            | **1.69s** user, **2.44s** system, **291%** CPU, **1.413s** total |
+
 
 ## Future plans
 
