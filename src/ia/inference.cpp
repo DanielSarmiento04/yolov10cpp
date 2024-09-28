@@ -1,6 +1,7 @@
 #include "inference.h"
 #include <algorithm>
 #include <iostream>
+#include <cmath> // For exp function
 
 const std::vector<std::string> InferenceEngine::CLASS_NAMES = {
     "person", "bicycle", "car", "motorcycle", "airplane", "bus", "train", "truck", "boat", "traffic light",
@@ -47,6 +48,59 @@ cv::Mat letterbox(const cv::Mat &src, const cv::Size &target_size, const cv::Sca
 
     return dst;
 }
+
+/**
+ * @brief Computes the Intersection over Union (IoU) between two bounding boxes.
+ *
+ * @param boxA First bounding box.
+ * @param boxB Second bounding box.
+ * @return IoU value between 0 and 1.
+ */
+float computeIOU(const cv::Rect &boxA, const cv::Rect &boxB)
+{
+    int xA = std::max(boxA.x, boxB.x);
+    int yA = std::max(boxA.y, boxB.y);
+    int xB = std::min(boxA.x + boxA.width, boxB.x + boxB.width);
+    int yB = std::min(boxA.y + boxA.height, boxB.y + boxB.height);
+
+    int interArea = std::max(0, xB - xA) * std::max(0, yB - yA);
+
+    int boxAArea = boxA.width * boxA.height;
+    int boxBArea = boxB.width * boxB.height;
+
+    float iou = static_cast<float>(interArea) / (boxAArea + boxBArea - interArea);
+    return iou;
+}
+
+
+/**
+ * @brief Applies Soft-NMS to a set of detected bounding boxes to reduce overlapping detections.
+ *
+ * @param detections Vector of detections to process.
+ * @param sigma Soft-NMS parameter controlling the Gaussian function's width. Default is 0.5.
+ * @param iou_threshold IoU threshold for suppression. Default is 0.3.
+ */
+void applySoftNMS(std::vector<Detection> &detections, float sigma = 0.5, float iou_threshold = 0.3)
+{
+    for (size_t i = 0; i < detections.size(); ++i)
+    {
+        for (size_t j = i + 1; j < detections.size(); ++j)
+        {
+            float iou = computeIOU(detections[i].bbox, detections[j].bbox);
+            if (iou > iou_threshold)
+            {
+                // Apply the Soft-NMS score decay formula
+                detections[j].confidence *= std::exp(-iou * iou / sigma);
+            }
+        }
+    }
+
+    // Remove detections with low confidence scores
+    detections.erase(std::remove_if(detections.begin(), detections.end(),
+                                    [](const Detection &det) { return det.confidence < 0.001; }),
+                     detections.end());
+}
+
 
 
 InferenceEngine::InferenceEngine(const std::string &model_path)
@@ -160,6 +214,9 @@ std::vector<Detection> InferenceEngine::filterDetections(const std::vector<float
                  CLASS_NAMES[class_id]});
         }
     }
+
+    // Apply Soft-NMS to refine detections
+    applySoftNMS(detections, 0.5, 0.3); // You can tweak the sigma and IoU threshold values as needed
 
     return detections;
 }

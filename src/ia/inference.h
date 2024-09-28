@@ -5,6 +5,7 @@
 #include <opencv2/opencv.hpp>
 #include <vector>
 #include <string>
+#include <cmath> // For exp function
 
 struct Detection
 {

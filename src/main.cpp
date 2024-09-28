@@ -18,8 +18,7 @@ int main(int argc, char *argv[])
     try
     {
         InferenceEngine engine(model_path);
-
-        
+    
         cv::Mat image = cv::imread(image_path);
         int orig_width = image.cols;
         int orig_height = image.rows;
@@ -28,7 +27,6 @@ int main(int argc, char *argv[])
         std::vector<float> results = engine.runInference(input_tensor_values);
 
         float confidence_threshold = 0.3;
-
 
         std::vector<Detection> detections = engine.filterDetections(results, confidence_threshold, engine.input_shape[2], engine.input_shape[3], orig_width, orig_height);
 
