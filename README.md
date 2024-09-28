@@ -118,6 +118,8 @@ our cpp binding | python binding
   <img src="./assets/yolo/zidane.jpg" alt="Image 2" width="45%"/>
 </p>
 
+> source = Apple M3 PRO
+
 | Command Line Execution                                              | Resource Utilization                                 |
 |---------------------------------------------------------------------|------------------------------------------------------|
 | `./yolov10_cpp ../yolov10n.onnx ../bus.jpg`                         | **0.46s** user, **0.10s** system, **94%** CPU, **0.595s** total |
