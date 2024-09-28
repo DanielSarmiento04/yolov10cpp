@@ -102,6 +102,81 @@ void applySoftNMS(std::vector<Detection> &detections, float sigma = 0.5, float i
 }
 
 
+/**
+ * @brief Apply Histogram Equalization to an image.
+ *
+ * @param src Input image in BGR format.
+ * @return Image with enhanced contrast.
+ */
+cv::Mat applyHistogramEqualization(const cv::Mat &src)
+{
+    cv::Mat ycrcb_image;
+    cv::cvtColor(src, ycrcb_image, cv::COLOR_BGR2YCrCb);  // Convert to YCrCb color space
+
+    std::vector<cv::Mat> channels;
+    cv::split(ycrcb_image, channels);
+
+    // Apply histogram equalization to the Y channel (intensity)
+    cv::equalizeHist(channels[0], channels[0]);
+
+    // Merge back the channels and convert to BGR
+    cv::merge(channels, ycrcb_image);
+    cv::Mat result;
+    cv::cvtColor(ycrcb_image, result, cv::COLOR_YCrCb2BGR);
+
+    return result;
+}
+
+/**
+ * @brief Apply CLAHE to an image for adaptive contrast enhancement.
+ *
+ * @param src Input image in BGR format.
+ * @return Image with enhanced local contrast.
+ */
+cv::Mat applyCLAHE(const cv::Mat &src)
+{
+    cv::Mat lab_image;
+    cv::cvtColor(src, lab_image, cv::COLOR_BGR2Lab);  // Convert to LAB color space
+
+    std::vector<cv::Mat> lab_planes;
+    cv::split(lab_image, lab_planes);
+
+    // Apply CLAHE to the L channel (lightness)
+    cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE();
+    clahe->setClipLimit(4.0);  // Set the clip limit for contrast enhancement
+    clahe->apply(lab_planes[0], lab_planes[0]);
+
+    // Merge the planes back and convert to BGR
+    cv::merge(lab_planes, lab_image);
+    cv::Mat result;
+    cv::cvtColor(lab_image, result, cv::COLOR_Lab2BGR);
+
+    return result;
+}
+
+
+/**
+ * @brief Apply Gamma Correction to an image.
+ *
+ * @param src Input image in BGR format.
+ * @param gamma Gamma value for correction. Values < 1 will lighten the image, values > 1 will darken it.
+ * @return Image with gamma correction applied.
+ */
+cv::Mat applyGammaCorrection(const cv::Mat &src, float gamma)
+{
+    cv::Mat lut(1, 256, CV_8UC1);
+    uchar* p = lut.ptr();
+    for (int i = 0; i < 256; ++i)
+    {
+        p[i] = cv::saturate_cast<uchar>(std::pow(i / 255.0, gamma) * 255.0);
+    }
+
+    cv::Mat result;
+    cv::LUT(src, lut, result);  // Apply the gamma lookup table to the image
+
+    return result;
+}
+
 
 InferenceEngine::InferenceEngine(const std::string &model_path)
     : env(ORT_LOGGING_LEVEL_WARNING, "ONNXRuntime"),
@@ -134,16 +209,21 @@ std::vector<float> InferenceEngine::preprocessImage(const cv::Mat &image)
         throw std::runtime_error("Could not read the image");
     }
 
-    // Apply letterbox to the image to maintain aspect ratio
-    cv::Mat letterboxed_image = letterbox(image, cv::Size(input_shape[2], input_shape[3]));
+    // Step 1: Apply image enhancement techniques
+    cv::Mat enhanced_image = applyCLAHE(image);  // Use CLAHE as an example
+    // cv::Mat enhanced_image = applyHistogramEqualization(image);  // Or use Histogram Equalization
+    // cv::Mat enhanced_image = applyGammaCorrection(image, 1.2);  // Or use Gamma Correction
 
-    // Convert image to float and normalize
+    // Step 2: Apply letterbox to the enhanced image
+    cv::Mat letterboxed_image = letterbox(enhanced_image, cv::Size(input_shape[2], input_shape[3]));
+
+    // Step 3: Convert image to float and normalize
     letterboxed_image.convertTo(letterboxed_image, CV_32F, 1.0 / 255);
 
-    // Convert from BGR to RGB
+    // Step 4: Convert from BGR to RGB
     cv::cvtColor(letterboxed_image, letterboxed_image, cv::COLOR_BGR2RGB);
 
-    // Prepare the input tensor values as a 1D vector
+    // Step 5: Prepare the input tensor values as a 1D vector
     std::vector<float> input_tensor_values;
     input_tensor_values.reserve(input_shape[1] * input_shape[2] * input_shape[3]);
 
@@ -158,6 +238,7 @@ std::vector<float> InferenceEngine::preprocessImage(const cv::Mat &image)
 
     return input_tensor_values;
 }
+
 
 
 /*
