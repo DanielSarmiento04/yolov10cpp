@@ -216,3 +216,5 @@ dkms.conf
 *.onnx
 
 *.pt
+
+*.DS_Store
