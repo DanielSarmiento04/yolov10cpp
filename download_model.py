@@ -21,6 +21,9 @@ parser.add_argument(
 args = parser.parse_args()
 
 def download_model(model):
+    '''
+        Function to download the model from the github release page
+    '''
 
     url = "https://github.com/THU-MIG/yolov10/releases/download/v1.1/" + model + ".pt"
     # Downloading zip file using urllib package.
