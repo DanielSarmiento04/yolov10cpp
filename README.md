@@ -104,6 +104,21 @@ dotnet add package Microsoft.ML.OnnxRuntime
     ./yolov10_cpp_video [MODEL_PATH] [SOURCE]
 ```
 
+## Results 
+
+our cpp binding | python binding
+
+<p align="center">
+  <img src="assets/cpp/bus.jpg" alt="Image 1" width="45%" style="margin-right: 10px;"/>
+  <img src="assets/yolo/bus.jpg" alt="Image 2" width="45%"/>
+</p>
+
+<p align="center">
+  <img src="assets/cpp/zidane.jpg" alt="Image 1" width="45%" style="margin-right: 10px;"/>
+  <img src="assets/yolo/zidane.jpg" alt="Image 2" width="45%"/>
+</p>
+
+
 ## Future plans
 
 1. Modularize the components. ✅
