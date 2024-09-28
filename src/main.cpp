@@ -2,6 +2,8 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
 
+
+
 int main(int argc, char *argv[])
 {
     if (argc != 3)
@@ -25,7 +27,7 @@ int main(int argc, char *argv[])
 
         std::vector<float> results = engine.runInference(input_tensor_values);
 
-        float confidence_threshold = 0.5;
+        float confidence_threshold = 0.3;
 
 
         std::vector<Detection> detections = engine.filterDetections(results, confidence_threshold, engine.input_shape[2], engine.input_shape[3], orig_width, orig_height);

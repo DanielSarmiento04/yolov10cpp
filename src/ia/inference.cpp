@@ -13,6 +13,42 @@ const std::vector<std::string> InferenceEngine::CLASS_NAMES = {
     "cell phone", "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase",
     "scissors", "teddy bear", "hair drier", "toothbrush"};
 
+
+/**
+ * @brief Letterbox an image to fit into the target size without changing its aspect ratio.
+ * Adds padding to the shorter side to match the target dimensions.
+ *
+ * @param src Image to be letterboxed.
+ * @param target_size Desired output size (width and height should be the same).
+ * @param color Color of the padding (default is black).
+ * @return Letterboxed image with padding.
+ */
+cv::Mat letterbox(const cv::Mat &src, const cv::Size &target_size, const cv::Scalar &color = cv::Scalar(0, 0, 0))
+{
+    // Calculate scale and padding
+    float scale = std::min(target_size.width / (float)src.cols, target_size.height / (float)src.rows);
+    int new_width = static_cast<int>(src.cols * scale);
+    int new_height = static_cast<int>(src.rows * scale);
+
+    // Resize the image with the computed scale
+    cv::Mat resized_image;
+    cv::resize(src, resized_image, cv::Size(new_width, new_height));
+
+    // Create the output image with the target size and fill it with the padding color
+    cv::Mat dst = cv::Mat::zeros(target_size.height, target_size.width, src.type());
+    dst.setTo(color);
+
+    // Calculate the top-left corner where the resized image will be placed
+    int top = (target_size.height - new_height) / 2;
+    int left = (target_size.width - new_width) / 2;
+
+    // Place the resized image onto the center of the letterboxed image
+    resized_image.copyTo(dst(cv::Rect(left, top, resized_image.cols, resized_image.rows)));
+
+    return dst;
+}
+
+
 InferenceEngine::InferenceEngine(const std::string &model_path)
     : env(ORT_LOGGING_LEVEL_WARNING, "ONNXRuntime"),
       session_options(),
@@ -44,15 +80,22 @@ std::vector<float> InferenceEngine::preprocessImage(const cv::Mat &image)
         throw std::runtime_error("Could not read the image");
     }
 
-    cv::Mat resized_image;
-    cv::resize(image, resized_image, cv::Size(input_shape[2], input_shape[3]));
-    resized_image.convertTo(resized_image, CV_32F, 1.0 / 255);
+    // Apply letterbox to the image to maintain aspect ratio
+    cv::Mat letterboxed_image = letterbox(image, cv::Size(input_shape[2], input_shape[3]));
 
-    std::vector<cv::Mat> channels(3);
-    cv::split(resized_image, channels);
+    // Convert image to float and normalize
+    letterboxed_image.convertTo(letterboxed_image, CV_32F, 1.0 / 255);
 
+    // Convert from BGR to RGB
+    cv::cvtColor(letterboxed_image, letterboxed_image, cv::COLOR_BGR2RGB);
+
+    // Prepare the input tensor values as a 1D vector
     std::vector<float> input_tensor_values;
     input_tensor_values.reserve(input_shape[1] * input_shape[2] * input_shape[3]);
+
+    // Convert Mat to vector of floats (HWC to CHW)
+    std::vector<cv::Mat> channels(3);
+    cv::split(letterboxed_image, channels);
 
     for (int c = 0; c < 3; ++c)
     {
@@ -61,6 +104,7 @@ std::vector<float> InferenceEngine::preprocessImage(const cv::Mat &image)
 
     return input_tensor_values;
 }
+
 
 /*
  * Function to filter the detections based on the confidence threshold
@@ -78,6 +122,13 @@ std::vector<Detection> InferenceEngine::filterDetections(const std::vector<float
     std::vector<Detection> detections;
     const int num_detections = results.size() / 6;
 
+    // Calculate scale and padding factors
+    float scale = std::min(img_width / (float)orig_width, img_height / (float)orig_height);
+    int new_width = static_cast<int>(orig_width * scale);
+    int new_height = static_cast<int>(orig_height * scale);
+    int pad_x = (img_width - new_width) / 2;
+    int pad_y = (img_height - new_height) / 2;
+
     detections.reserve(num_detections);
 
     for (int i = 0; i < num_detections; ++i)
@@ -91,10 +142,16 @@ std::vector<Detection> InferenceEngine::filterDetections(const std::vector<float
 
         if (confidence >= confidence_threshold)
         {
-            int x = static_cast<int>(left * orig_width / img_width);
-            int y = static_cast<int>(top * orig_height / img_height);
-            int width = static_cast<int>((right - left) * orig_width / img_width);
-            int height = static_cast<int>((bottom - top) * orig_height / img_height);
+            // Remove padding and rescale to original image dimensions
+            left = (left - pad_x) / scale;
+            top = (top - pad_y) / scale;
+            right = (right - pad_x) / scale;
+            bottom = (bottom - pad_y) / scale;
+
+            int x = static_cast<int>(left);
+            int y = static_cast<int>(top);
+            int width = static_cast<int>(right - left);
+            int height = static_cast<int>(bottom - top);
 
             detections.push_back(
                 {confidence,
@@ -106,6 +163,7 @@ std::vector<Detection> InferenceEngine::filterDetections(const std::vector<float
 
     return detections;
 }
+
 
 /*
  * Function to run inference
