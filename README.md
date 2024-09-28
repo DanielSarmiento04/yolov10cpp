@@ -106,9 +106,13 @@ dotnet add package Microsoft.ML.OnnxRuntime
 
 ## Future plans
 
-1. Modularize the components.
-2. Make a example to video real time.
+1. Modularize the components. ✅
+2. Make a example to video real time. ✅
 3. Support Cuda. ?
+
+## Inspiration
+
+[Ultraopxt](https://github.com/Ultraopxt/yolov10cpp)
 
 
 ## Reference 
